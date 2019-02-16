@@ -6,14 +6,17 @@ from typing import List
 
 from bs4 import BeautifulSoup
 
-from playlist_everywhere.vendor.common import BaseSong, BaseClient
+from playlist_everywhere.vendor.common import BaseClient, BaseSong
+from playlist_everywhere.vendor.enums import PlaylistType
 
 
 class MelonClient(BaseClient):
-    def get_playlist(self, playlist_type: str, playlist_id: str) -> List[BaseSong]:
-        if playlist_type == "dj":
-            return self.get_djplaylist(playlist_id)
+    def get_supported_playlist_types(self) -> List[PlaylistType]:
+        return [PlaylistType.dj]
 
+    def get_playlist(self, playlist_type: str, playlist_id: str) -> List[BaseSong]:
+        if playlist_type == PlaylistType.dj:
+            return self.get_djplaylist(playlist_id)
         else:
             raise ValueError('올바르지 않은 플레이리스트 유형입니다.')
 
@@ -34,7 +37,7 @@ class MelonClient(BaseClient):
                 song_id = song_item_attr_dom[0].select("input")[0]['value']
                 song_title = song_item_attr_dom[4].select('div.ellipsis.rank01 a')[0].get_text().strip()
                 song_artist = song_item_attr_dom[4].select('div.ellipsis.rank02 a')[0].get_text().strip()
-                result_songs.append(BaseSong(song_id, song_title, song_artist))
+                result_songs.append(BaseSong(song_id, song_title, song_artist, ''))
 
             navigation_text = navigation_pattern.findall(list_request.text)[0]
             next_navigation_text = navigation_text.split("현재페이지")[1]

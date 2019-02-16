@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from typing import List
+from typing import List, Tuple
 
 from requests import Session
+
+from playlist_everywhere.vendor.enums import PlaylistType, SigninMethod
 
 
 class ClientNotAuthenticated(Exception):
@@ -24,17 +26,19 @@ class BaseSong:
     id: str
     title: str
     artist: str
+    playlist_name: str
 
-    def __init__(self, id: str, title: str, artist: str):
+    def __init__(self, id: str, title: str, artist: str, playlist_name: str):
         self.id = id
         self.title = title
         self.artist = artist
+        self.playlist_name = playlist_name
 
     def __str__(self):
         return f"{self.artist} - {self.title}"
 
     def __repr__(self):
-        return f"{self.__class__.__name__}('{self.id}', '{self.title}', '{self.artist}')"
+        return f"{self.__class__.__name__}('{self.id}', '{self.title}', '{self.artist}, {self.playlist_name}')"
 
 
 class BaseClient:
@@ -55,13 +59,20 @@ class BaseClient:
         self.is_signin = False
         self.additional_data = {}
 
-    def signin(self, account_id: str, account_password: str):
+    def get_supported_signin_methods(self) -> List[SigninMethod]:
+        raise NotImplementedError('지원되는 로그인 방법이 없습니다.')
+
+    def get_supported_playlist_types(self) -> List[PlaylistType]:
+        raise NotImplementedError('지원되는 플레이 리스트 타입이 없습니다.')
+
+    def signin(self, account_id: str = '', account_password: str = '', cookies: dict = None) -> bool:
         """
         음원사 로그인
 
         Args:
             account_id (str): 계정 ID (아이디 또는 이메일)
             account_password (str): 계정 비밀번호
+            cookies (dict): 음원사에 로그인 한 후의 쿠키 값
 
         Returns:
             반환값은 없습니다. 로그인 실패 시 Exception을 발생시켜야합니다.

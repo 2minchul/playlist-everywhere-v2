@@ -2,15 +2,22 @@
 # -*- coding: utf-8 -*-
 
 import re
-from typing import List
+from typing import List, Tuple
 
 from bs4 import BeautifulSoup
 
-from playlist_everywhere.vendor.common import BaseSong, BaseClient, ClientNotAuthenticated
+from playlist_everywhere.vendor.common import BaseClient, BaseSong, ClientNotAuthenticated
+from playlist_everywhere.vendor.enums import SigninMethod
 
 
 class GenieClient(BaseClient):
-    def signin(self, account_id: str, account_password: str):
+    def get_supported_signin_methods(self):
+        return [SigninMethod.id_pw]
+
+    def signin(self, account_id: str = '', account_password: str = '', cookies: dict = None):
+        if cookies:
+            raise ClientNotAuthenticated('아직 지원하지 않는 로그인 방식 입니다.')
+
         login_request = self.session.post("https://www.genie.co.kr/auth/signIn", data={
             'login_suxd': "",
             'login_suxn': "",
@@ -50,11 +57,11 @@ class GenieClient(BaseClient):
                 junk_icon.decompose()
             song_title = song_title_dom.get_text().strip()
             song_artist = search_item_dom.select("td.info > a.artist")[0].get_text().strip()
-            search_result.append(BaseSong(song_id, song_title, song_artist))
+            search_result.append(BaseSong(song_id, song_title, song_artist, ''))
 
         return search_result
 
-    def get_playlist(self, playlist_type: str, playlist_id: str) -> List[BaseSong]:
+    def get_playlist(self, playlist_type: str, playlist_id: str) ->  List[BaseSong]:
         raise NotImplementedError("지니 플레이리스트 조회 기능은 준비중입니다.")
 
     def create_personal_playlist(self, playlist_name: str) -> str:
